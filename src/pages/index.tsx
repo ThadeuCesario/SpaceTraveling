@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+import { useState } from 'react';
 import { GetStaticProps } from 'next';
 import Prismic from '@prismicio/client';
 import { FiCalendar, FiUser } from 'react-icons/fi';
@@ -29,69 +30,63 @@ interface HomeProps {
   postsPagination: PostPagination;
 }
 
-// {
-//   next_page: ,
-//   results: [
-//     {
-//       uid?: string;
-//       first_publication_date: string | null;
-//       data: {
-//         title: string;
-//         subtitle: string;
-//         author: string;
-//       };
-//     }
-//   ]
-// }
-
 export default function Home({ postsPagination }: HomeProps) {
-  console.log(postsPagination);
+  const [posts, setPosts] = useState<PostPagination>(postsPagination);
+
+  async function handlePosts() {
+    const nextPage = posts.next_page;
+
+    const nextPageData = await fetch(nextPage).then(result =>
+      result.text().then(response => {
+        const jsonResponse = JSON.parse(response);
+        return {
+          next_page: jsonResponse.next_page,
+          results: jsonResponse.results.map(post => {
+            return {
+              uid: post.uid,
+              first_publication_date:
+                format(new Date(post.last_publication_date), 'dd MMM yyyy') ||
+                null,
+              data: {
+                title: post.data.title,
+                subtitle: post.data.subtitle,
+                author: post.data.author,
+              },
+            };
+          }),
+        };
+      })
+    );
+
+    setPosts(nextPageData);
+  }
+
   return (
     <main className={styles.containerHome}>
-      <div className={styles.post}>
-        <h1>Como utilizar Hooks</h1>
-        <strong>Pensando em sincronização em vez de ciclos de vida.</strong>
-        <div className={styles.postDetails}>
-          <div className={styles.postDate}>
-            <FiCalendar width={20} height={20} color="#bbbbbb" />
-            15 Abr 2021
-          </div>
-          <div className={styles.postAuthor}>
-            <FiUser color="#bbbbbb" />
-            Joseph Oliveira
+      {posts.results.map(post => (
+        <div className={styles.post} key={post.uid}>
+          <h1>{post.data.title}</h1>
+          <strong>{post.data.subtitle}</strong>
+          <div className={styles.postDetails}>
+            <div className={styles.postDate}>
+              <FiCalendar width={20} height={20} color="#bbbbbb" />
+              {post.first_publication_date}
+            </div>
+            <div className={styles.postAuthor}>
+              <FiUser color="#bbbbbb" />
+              {post.data.author}
+            </div>
           </div>
         </div>
-      </div>
+      ))}
 
-      <div className={styles.post}>
-        <h1>Como utilizar Hooks</h1>
-        <strong>Pensando em sincronização em vez de ciclos de vida.</strong>
-        <div className={styles.postDetails}>
-          <div className={styles.postDate}>
-            <FiCalendar width={20} height={20} color="#bbbbbb" />
-            15 Abr 2021
-          </div>
-          <div className={styles.postAuthor}>
-            <FiUser color="#bbbbbb" />
-            Joseph Oliveira
-          </div>
-        </div>
-      </div>
-
-      <div className={styles.post}>
-        <h1>Como utilizar Hooks</h1>
-        <strong>Pensando em sincronização em vez de ciclos de vida.</strong>
-        <div className={styles.postDetails}>
-          <div className={styles.postDate}>
-            <FiCalendar width={20} height={20} color="#bbbbbb" />
-            15 Abr 2021
-          </div>
-          <div className={styles.postAuthor}>
-            <FiUser color="#bbbbbb" />
-            Joseph Oliveira
-          </div>
-        </div>
-      </div>
+      <button
+        type="button"
+        className={styles.buttonLoadPosts}
+        onClick={handlePosts}
+      >
+        Carregar mais posts
+      </button>
     </main>
   );
 }
@@ -113,23 +108,25 @@ export const getStaticProps: GetStaticProps = async () => {
     }
   );
 
-  console.log(postsResponse);
-
-  // const postsPagination = postsResponse.results.map(post => {
-  //   // return {
-  //   //   slug: post.uid,
-  //   //   title: RichText.asText(post.data.title),
-  //   //   subtitle: RichText.asText(post.data.subtitle),
-  //   //   author: RichText.asText(post.data.author),
-  //   //   updatedAt: format(new Date(post.last_publication_date), "dd 'de' YYYY"),
-  //   // };
-  //   console.log('post', post);
-  //   return {
-  //     next_page:
-  //   };
-  // });
+  const postsPagination = {
+    next_page: postsResponse.next_page,
+    results: postsResponse.results.map(post => {
+      return {
+        uid: post.uid,
+        first_publication_date:
+          format(new Date(post.last_publication_date), 'dd MMM yyyy') || null,
+        data: {
+          title: post.data.title,
+          subtitle: post.data.subtitle,
+          author: post.data.author,
+        },
+      };
+    }),
+  };
 
   return {
-    props: {},
+    props: {
+      postsPagination,
+    },
   };
 };
