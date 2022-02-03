@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import { GetStaticProps } from 'next';
 import Prismic from '@prismicio/client';
+import { FiCalendar, FiUser } from 'react-icons/fi';
 import { RichText } from 'prismic-dom';
 import { format } from 'date-fns';
 import ptBR from 'date-fns/locale/pt-BR';
@@ -46,9 +47,52 @@ interface HomeProps {
 export default function Home({ postsPagination }: HomeProps) {
   console.log(postsPagination);
   return (
-    <>
-      <div />
-    </>
+    <main className={styles.containerHome}>
+      <div className={styles.post}>
+        <h1>Como utilizar Hooks</h1>
+        <strong>Pensando em sincronização em vez de ciclos de vida.</strong>
+        <div className={styles.postDetails}>
+          <div className={styles.postDate}>
+            <FiCalendar width={20} height={20} color="#bbbbbb" />
+            15 Abr 2021
+          </div>
+          <div className={styles.postAuthor}>
+            <FiUser color="#bbbbbb" />
+            Joseph Oliveira
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.post}>
+        <h1>Como utilizar Hooks</h1>
+        <strong>Pensando em sincronização em vez de ciclos de vida.</strong>
+        <div className={styles.postDetails}>
+          <div className={styles.postDate}>
+            <FiCalendar width={20} height={20} color="#bbbbbb" />
+            15 Abr 2021
+          </div>
+          <div className={styles.postAuthor}>
+            <FiUser color="#bbbbbb" />
+            Joseph Oliveira
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.post}>
+        <h1>Como utilizar Hooks</h1>
+        <strong>Pensando em sincronização em vez de ciclos de vida.</strong>
+        <div className={styles.postDetails}>
+          <div className={styles.postDate}>
+            <FiCalendar width={20} height={20} color="#bbbbbb" />
+            15 Abr 2021
+          </div>
+          <div className={styles.postAuthor}>
+            <FiUser color="#bbbbbb" />
+            Joseph Oliveira
+          </div>
+        </div>
+      </div>
+    </main>
   );
 }
 
