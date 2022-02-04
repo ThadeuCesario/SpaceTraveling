@@ -31,10 +31,10 @@ interface HomeProps {
 }
 
 export default function Home({ postsPagination }: HomeProps) {
-  const [posts, setPosts] = useState<PostPagination>(postsPagination);
+  const [posts, setPosts] = useState<PostPagination[]>([postsPagination]);
 
   async function handlePosts() {
-    const nextPage = posts.next_page;
+    const nextPage = posts[posts.length - 1].next_page;
 
     const nextPageData = await fetch(nextPage).then(result =>
       result.text().then(response => {
@@ -58,27 +58,29 @@ export default function Home({ postsPagination }: HomeProps) {
       })
     );
 
-    setPosts(nextPageData);
+    setPosts([...posts, nextPageData]);
   }
 
   return (
     <main className={styles.containerHome}>
-      {posts.results.map(post => (
-        <div className={styles.post} key={post.uid}>
-          <h1>{post.data.title}</h1>
-          <strong>{post.data.subtitle}</strong>
-          <div className={styles.postDetails}>
-            <div className={styles.postDate}>
-              <FiCalendar width={20} height={20} color="#bbbbbb" />
-              {post.first_publication_date}
-            </div>
-            <div className={styles.postAuthor}>
-              <FiUser color="#bbbbbb" />
-              {post.data.author}
+      {posts.map(item =>
+        item.results.map(post => (
+          <div className={styles.post} key={post.uid}>
+            <h1>{post.data.title}</h1>
+            <strong>{post.data.subtitle}</strong>
+            <div className={styles.postDetails}>
+              <div className={styles.postDate}>
+                <FiCalendar width={20} height={20} color="#bbbbbb" />
+                {post.first_publication_date}
+              </div>
+              <div className={styles.postAuthor}>
+                <FiUser color="#bbbbbb" />
+                {post.data.author}
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        ))
+      )}
 
       <button
         type="button"
