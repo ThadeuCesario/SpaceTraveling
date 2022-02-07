@@ -1,12 +1,12 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { GetStaticProps } from 'next';
+import Link from 'next/link';
 import Prismic from '@prismicio/client';
 import { FiCalendar, FiUser } from 'react-icons/fi';
-import { RichText } from 'prismic-dom';
 import { format } from 'date-fns';
-import ptBR from 'date-fns/locale/pt-BR';
 import { getPrismicClient } from '../services/prismic';
 import commonStyles from '../styles/common.module.scss';
 import styles from './home.module.scss';
@@ -65,30 +65,34 @@ export default function Home({ postsPagination }: HomeProps) {
     <main className={styles.containerHome}>
       {posts.map(item =>
         item.results.map(post => (
-          <div className={styles.post} key={post.uid}>
-            <h1>{post.data.title}</h1>
-            <strong>{post.data.subtitle}</strong>
-            <div className={styles.postDetails}>
-              <div className={styles.postDate}>
-                <FiCalendar width={20} height={20} color="#bbbbbb" />
-                {post.first_publication_date}
+          <Link key={post.uid} href={`posts/${post.uid}`}>
+            <a className={styles.post}>
+              <h1>{post.data.title}</h1>
+              <strong>{post.data.subtitle}</strong>
+              <div className={styles.postDetails}>
+                <div className={styles.postDate}>
+                  <FiCalendar width={20} height={20} color="#bbbbbb" />
+                  {post.first_publication_date}
+                </div>
+                <div className={styles.postAuthor}>
+                  <FiUser color="#bbbbbb" />
+                  {post.data.author}
+                </div>
               </div>
-              <div className={styles.postAuthor}>
-                <FiUser color="#bbbbbb" />
-                {post.data.author}
-              </div>
-            </div>
-          </div>
+            </a>
+          </Link>
         ))
       )}
 
-      <button
-        type="button"
-        className={styles.buttonLoadPosts}
-        onClick={handlePosts}
-      >
-        Carregar mais posts
-      </button>
+      {posts[posts.length - 1].next_page && (
+        <button
+          type="button"
+          className={styles.buttonLoadPosts}
+          onClick={handlePosts}
+        >
+          Carregar mais posts
+        </button>
+      )}
     </main>
   );
 }
