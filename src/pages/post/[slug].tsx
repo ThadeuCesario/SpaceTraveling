@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import { GetStaticPaths, GetStaticProps } from 'next';
 
 import { getPrismicClient } from '../../services/prismic';
@@ -26,9 +28,10 @@ interface PostProps {
   post: Post;
 }
 
-// export default function Post() {
-//   // TODO
-// }
+export default function Post({ post }: PostProps) {
+  console.log(post);
+  return <h1>bananas</h1>;
+}
 
 // export const getStaticPaths = async () => {
 //   const prismic = getPrismicClient();
@@ -37,9 +40,13 @@ interface PostProps {
 //   // TODO
 // };
 
-// export const getStaticProps = async context => {
-//   const prismic = getPrismicClient();
-//   const response = await prismic.getByUID(TODO);
+export const getStaticProps: GetStaticProps = async ({ params }) => {
+  // const prismic = getPrismicClient();
+  // const response = await prismic.getByUID(TODO);
 
-//   // TODO
-// };
+  console.log(params);
+
+  return {
+    props: {},
+  };
+};
