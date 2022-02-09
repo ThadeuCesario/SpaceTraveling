@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import { GetStaticPaths, GetStaticProps } from 'next';
-
+import { format } from 'date-fns';
+import { FiCalendar, FiUser, FiClock } from 'react-icons/fi';
 import { getPrismicClient } from '../../services/prismic';
-
 import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
 
@@ -29,11 +29,34 @@ interface PostProps {
 }
 
 export default function Post({ post }: PostProps) {
-  console.log('post', post);
-  return <h1>bananas</h1>;
+  const dateFormated = String(
+    format(new Date('2021-03-25T19:25:28+0000'), 'dd MMM yyyy')
+  ).toLowerCase();
+
+  return (
+    <div>
+      <img src={post.data.banner.url} alt="banner" className={styles.banner} />
+      <h1>{post.data.title}</h1>
+      <div>
+        <div>
+          <FiCalendar color="#bbbbbb" />
+          <span>{dateFormated}</span>
+        </div>
+        <div>
+          <FiUser color="#bbbbbb" />
+          <span>{post.data.author}</span>
+        </div>
+        <div>
+          <FiClock color="#bbbbbb" />
+          <span>4 min</span>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {
+  // console.log('getStaticPaths', props);
   // const prismic = getPrismicClient();
   // const posts = await prismic.query(TODO);
 
@@ -48,7 +71,7 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
   const prismic = getPrismicClient();
   const response = await prismic.getByUID('post', String(slug), {});
   const post = {
-    first_publication_date: response.first_publication_date,
+    first_publication_date: response.first_publication_date || null,
     uid: response.uid,
     data: {
       title: response.data.title,
