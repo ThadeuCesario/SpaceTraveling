@@ -3,8 +3,8 @@
 import { GetStaticPaths, GetStaticProps } from 'next';
 import { format } from 'date-fns';
 import { FiCalendar, FiUser, FiClock } from 'react-icons/fi';
+import { RichText } from 'prismic-dom';
 import { getPrismicClient } from '../../services/prismic';
-import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
 
 interface Post {
@@ -34,24 +34,49 @@ export default function Post({ post }: PostProps) {
   ).toLowerCase();
 
   return (
-    <div>
-      <img src={post.data.banner.url} alt="banner" className={styles.banner} />
-      <h1>{post.data.title}</h1>
-      <div>
-        <div>
-          <FiCalendar color="#bbbbbb" />
-          <span>{dateFormated}</span>
-        </div>
-        <div>
-          <FiUser color="#bbbbbb" />
-          <span>{post.data.author}</span>
-        </div>
-        <div>
-          <FiClock color="#bbbbbb" />
-          <span>4 min</span>
-        </div>
-      </div>
-    </div>
+    <>
+      {post ? (
+        <section>
+          <img
+            src={post.data.banner.url}
+            alt="banner"
+            className={styles.banner}
+          />
+
+          <div className={styles.content}>
+            <h1>{post.data.title}</h1>
+            <div className={styles.postDetails}>
+              <div>
+                <FiCalendar color="#bbbbbb" />
+                <span>{dateFormated}</span>
+              </div>
+              <div>
+                <FiUser color="#bbbbbb" />
+                <span>{post.data.author}</span>
+              </div>
+              <div>
+                <FiClock color="#bbbbbb" />
+                <span>4 min</span>
+              </div>
+            </div>
+            <div className={styles.containerContent}>
+              {post.data.content.map(info => (
+                <div key={Math.random()}>
+                  <h1>{info.heading}</h1>
+                  <div>
+                    {info.body.map(task => (
+                      <p key={Math.random()}>{task.text}</p>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : (
+        <div>Carregando...</div>
+      )}
+    </>
   );
 }
 
@@ -62,7 +87,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
   return {
     paths: [],
-    fallback: 'blocking',
+    fallback: true,
   };
 };
 
@@ -90,3 +115,5 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
     },
   };
 };
+
+// https://nextjs.org/docs/api-reference/data-fetching/get-static-paths
