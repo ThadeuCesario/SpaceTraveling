@@ -1,14 +1,12 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { GetStaticProps } from 'next';
-import Link from 'next/link';
 import Prismic from '@prismicio/client';
+import Link from 'next/link';
 import { FiCalendar, FiUser } from 'react-icons/fi';
 import { format } from 'date-fns';
 import { getPrismicClient } from '../services/prismic';
-import commonStyles from '../styles/common.module.scss';
 import styles from './home.module.scss';
 
 interface Post {
@@ -36,29 +34,23 @@ export default function Home({ postsPagination }: HomeProps) {
   async function handlePosts() {
     const nextPage = posts[posts.length - 1].next_page;
 
-    const nextPageData = await fetch(nextPage).then(result =>
-      result.text().then(response => {
-        const jsonResponse = JSON.parse(response);
+    const nextPageData = await fetch(nextPage).then(result => result.json());
+    const nextPageProps = {
+      next_page: nextPageData.next_page,
+      results: nextPageData.results.map(post => {
         return {
-          next_page: jsonResponse.next_page,
-          results: jsonResponse.results.map(post => {
-            return {
-              uid: post.uid,
-              first_publication_date:
-                format(new Date(post.last_publication_date), 'dd MMM yyyy') ||
-                null,
-              data: {
-                title: post.data.title,
-                subtitle: post.data.subtitle,
-                author: post.data.author,
-              },
-            };
-          }),
+          uid: post.uid,
+          first_publication_date: post.first_publication_date,
+          data: {
+            title: post.data.title,
+            subtitle: post.data.subtitle,
+            author: post.data.author,
+          },
         };
-      })
-    );
+      }),
+    };
 
-    setPosts([...posts, nextPageData]);
+    setPosts([...posts, nextPageProps]);
   }
 
   return (
@@ -72,7 +64,9 @@ export default function Home({ postsPagination }: HomeProps) {
               <div className={styles.postDetails}>
                 <div className={styles.postDate}>
                   <FiCalendar width={20} height={20} color="#bbbbbb" />
-                  {post.first_publication_date}
+                  {String(
+                    format(new Date(post.first_publication_date), 'dd MMM yyyy')
+                  ).toLowerCase()}
                 </div>
                 <div className={styles.postAuthor}>
                   <FiUser color="#bbbbbb" />
@@ -97,13 +91,6 @@ export default function Home({ postsPagination }: HomeProps) {
   );
 }
 
-export const getStaticPaths = () => {
-  return {
-    paths: [],
-    fallback: 'blocking',
-  };
-};
-
 export const getStaticProps: GetStaticProps = async () => {
   const prismic = getPrismicClient();
   const postsResponse = await prismic.query(
@@ -119,8 +106,7 @@ export const getStaticProps: GetStaticProps = async () => {
     results: postsResponse.results.map(post => {
       return {
         uid: post.uid,
-        first_publication_date:
-          format(new Date(post.last_publication_date), 'dd MMM yyyy') || null,
+        first_publication_date: post.first_publication_date,
         data: {
           title: post.data.title,
           subtitle: post.data.subtitle,
