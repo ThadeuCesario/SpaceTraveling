@@ -5,11 +5,14 @@ import { useRouter } from 'next/router';
 import { format } from 'date-fns';
 import Prismic from '@prismicio/client';
 import { FiCalendar, FiUser, FiClock } from 'react-icons/fi';
+import Link from 'next/link';
 import { getPrismicClient } from '../../services/prismic';
 import styles from './post.module.scss';
+import Utterances from '../../components/Utterances';
 
 interface Post {
   first_publication_date: string | null;
+  last_publication_date: string | null;
   data: {
     title: string;
     banner: {
@@ -25,14 +28,30 @@ interface Post {
   };
 }
 
-interface PostProps {
-  post: Post;
+interface BeforePost {
+  uid: string | null;
+  title: string;
 }
 
-export default function Post({ post }: PostProps) {
+interface AfterPost {
+  uid: string | null;
+  title: string;
+}
+
+interface PostProps {
+  post: Post;
+  beforePost: BeforePost;
+  afterPost: AfterPost;
+}
+
+export default function Post({ post, beforePost, afterPost }: PostProps) {
   const router = useRouter();
   const dateFormated = String(
-    format(new Date('2021-03-25T19:25:28+0000'), 'dd MMM yyyy')
+    format(new Date(post.first_publication_date), 'dd MMM yyyy')
+  ).toLowerCase();
+
+  const lastChangeDate = String(
+    format(new Date('2021-03-25T19:25:28+0000'), "dd MMM yyyy 'às' HH:mm")
   ).toLowerCase();
 
   if (router.isFallback) {
@@ -45,19 +64,22 @@ export default function Post({ post }: PostProps) {
 
       <div className={styles.content}>
         <h1>{post.data.title}</h1>
-        <div className={styles.postDetails}>
-          <div>
-            <FiCalendar color="#bbbbbb" />
-            <span>{dateFormated}</span>
+        <div className={styles.containerPostDetails}>
+          <div className={styles.postDetails}>
+            <div>
+              <FiCalendar color="#bbb" />
+              <span>{dateFormated}</span>
+            </div>
+            <div>
+              <FiUser color="#bbb" />
+              <span>{post.data.author}</span>
+            </div>
+            <div>
+              <FiClock color="#bbb" />
+              <span>4 min</span>
+            </div>
           </div>
-          <div>
-            <FiUser color="#bbbbbb" />
-            <span>{post.data.author}</span>
-          </div>
-          <div>
-            <FiClock color="#bbbbbb" />
-            <span>4 min</span>
-          </div>
+          <strong>* editado em {lastChangeDate}</strong>
         </div>
         <div className={styles.containerContent}>
           {post.data.content.map(info => (
@@ -72,6 +94,26 @@ export default function Post({ post }: PostProps) {
           ))}
         </div>
       </div>
+      <div className={styles.division} />
+      <div className={styles.containerSliderPosts}>
+        {afterPost?.title && (
+          <div className={`${styles.sliderPost} ${styles.left}`}>
+            <strong>{afterPost.title}</strong>
+            <Link href={`${afterPost.uid}`}>
+              <a className={styles.left}>Post anterior</a>
+            </Link>
+          </div>
+        )}
+        {beforePost?.title && (
+          <div className={`${styles.sliderPost} ${styles.right}`}>
+            <strong>{beforePost.title}</strong>
+            <Link href={`${beforePost.uid}`}>
+              <a className={styles.right}>Próximo post</a>
+            </Link>
+          </div>
+        )}
+      </div>
+      <Utterances />
     </section>
   );
 }
@@ -99,8 +141,37 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
   const { slug } = params;
   const prismic = getPrismicClient();
   const response = await prismic.getByUID('post', String(slug), {});
+  const responseAfterPost = await prismic.query(
+    [
+      Prismic.predicates.at('document.type', 'post'),
+      Prismic.predicates.dateAfter(
+        'document.last_publication_date',
+        response.last_publication_date
+      ),
+    ],
+    {
+      fetch: ['post.title'],
+      pageSize: 1,
+    }
+  );
+
+  const responseBeforePost = await prismic.query(
+    [
+      Prismic.predicates.at('document.type', 'post'),
+      Prismic.predicates.dateBefore(
+        'document.last_publication_date',
+        response.last_publication_date
+      ),
+    ],
+    {
+      fetch: ['post.title'],
+      pageSize: 1,
+    }
+  );
+
   const post = {
-    first_publication_date: response.first_publication_date || null,
+    first_publication_date: response.first_publication_date,
+    last_publication_date: response.last_publication_date,
     uid: response.uid,
     data: {
       title: response.data.title,
@@ -116,8 +187,22 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
   return {
     props: {
       post,
+      beforePost: {
+        uid: responseBeforePost.results.length
+          ? responseBeforePost.results[0].uid
+          : null,
+        title: responseBeforePost.results.length
+          ? responseBeforePost.results[0].data.title
+          : null,
+      },
+      afterPost: {
+        uid: responseAfterPost.results.length
+          ? responseAfterPost.results[0].uid
+          : null,
+        title: responseAfterPost.results.length
+          ? responseAfterPost.results[0].data.title
+          : null,
+      },
     },
   };
 };
-
-// https://nextjs.org/docs/api-reference/data-fetching/get-static-paths
