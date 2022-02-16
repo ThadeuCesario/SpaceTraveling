@@ -40,11 +40,18 @@ interface AfterPost {
 
 interface PostProps {
   post: Post;
+  preview: unknown;
   beforePost: BeforePost;
   afterPost: AfterPost;
 }
 
-export default function Post({ post, beforePost, afterPost }: PostProps) {
+export default function Post({
+  post,
+  preview,
+  beforePost,
+  afterPost,
+}: PostProps) {
+  console.log('preview', preview);
   const router = useRouter();
   const dateFormated = String(
     format(new Date(post.first_publication_date), 'dd MMM yyyy')
@@ -137,10 +144,16 @@ export const getStaticPaths: GetStaticPaths = async () => {
   };
 };
 
-export const getStaticProps: GetStaticProps = async ({ params }) => {
+export const getStaticProps: GetStaticProps = async ({
+  params,
+  preview = false,
+  previewData,
+}) => {
+  console.log('previewData', previewData);
   const { slug } = params;
   const prismic = getPrismicClient();
   const response = await prismic.getByUID('post', String(slug), {});
+
   const responseAfterPost = await prismic.query(
     [
       Prismic.predicates.at('document.type', 'post'),
@@ -187,6 +200,7 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
   return {
     props: {
       post,
+      preview,
       beforePost: {
         uid: responseBeforePost.results.length
           ? responseBeforePost.results[0].uid
