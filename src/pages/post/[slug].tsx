@@ -1,3 +1,5 @@
+/* eslint-disable prefer-const */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import { GetStaticPaths, GetStaticProps } from 'next';
@@ -150,37 +152,46 @@ export const getStaticProps: GetStaticProps = async ({
   previewData,
 }) => {
   console.log('previewData', previewData);
+  console.log('preview', preview);
   const { slug } = params;
   const prismic = getPrismicClient();
-  const response = await prismic.getByUID('post', String(slug), {});
+  const previewRef = previewData ? previewData.ref : null;
+  const refOption = previewRef ? { ref: previewRef } : {};
+  console.log('slug', slug);
+  const response = await prismic.getByUID('post', String(slug), refOption);
+  console.log('response', response);
+  let responseAfterPost = null;
+  let responseBeforePost = null;
 
-  const responseAfterPost = await prismic.query(
-    [
-      Prismic.predicates.at('document.type', 'post'),
-      Prismic.predicates.dateAfter(
-        'document.last_publication_date',
-        response.last_publication_date
-      ),
-    ],
-    {
-      fetch: ['post.title'],
-      pageSize: 1,
-    }
-  );
+  if (!preview) {
+    responseAfterPost = await prismic.query(
+      [
+        Prismic.predicates.at('document.type', 'post'),
+        Prismic.predicates.dateAfter(
+          'document.last_publication_date',
+          response.last_publication_date
+        ),
+      ],
+      {
+        fetch: ['post.title'],
+        pageSize: 1,
+      }
+    );
 
-  const responseBeforePost = await prismic.query(
-    [
-      Prismic.predicates.at('document.type', 'post'),
-      Prismic.predicates.dateBefore(
-        'document.last_publication_date',
-        response.last_publication_date
-      ),
-    ],
-    {
-      fetch: ['post.title'],
-      pageSize: 1,
-    }
-  );
+    responseBeforePost = await prismic.query(
+      [
+        Prismic.predicates.at('document.type', 'post'),
+        Prismic.predicates.dateBefore(
+          'document.last_publication_date',
+          response.last_publication_date
+        ),
+      ],
+      {
+        fetch: ['post.title'],
+        pageSize: 1,
+      }
+    );
+  }
 
   const post = {
     first_publication_date: response.first_publication_date,
@@ -201,22 +212,26 @@ export const getStaticProps: GetStaticProps = async ({
     props: {
       post,
       preview,
-      beforePost: {
-        uid: responseBeforePost.results.length
-          ? responseBeforePost.results[0].uid
-          : null,
-        title: responseBeforePost.results.length
-          ? responseBeforePost.results[0].data.title
-          : null,
-      },
-      afterPost: {
-        uid: responseAfterPost.results.length
-          ? responseAfterPost.results[0].uid
-          : null,
-        title: responseAfterPost.results.length
-          ? responseAfterPost.results[0].data.title
-          : null,
-      },
+      beforePost: !preview
+        ? {
+            uid: responseBeforePost.results.length
+              ? responseBeforePost.results[0].uid
+              : null,
+            title: responseBeforePost.results.length
+              ? responseBeforePost.results[0].data.title
+              : null,
+          }
+        : null,
+      afterPost: !preview
+        ? {
+            uid: responseAfterPost.results.length
+              ? responseAfterPost.results[0].uid
+              : null,
+            title: responseAfterPost.results.length
+              ? responseAfterPost.results[0].data.title
+              : null,
+          }
+        : null,
     },
   };
 };
