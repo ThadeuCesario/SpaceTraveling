@@ -30,7 +30,6 @@ interface HomeProps {
 }
 
 export default function Home({ postsPagination, preview }: HomeProps) {
-  console.log('preview', preview);
   const [posts, setPosts] = useState<PostPagination[]>([postsPagination]);
 
   async function handlePosts() {
