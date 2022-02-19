@@ -53,7 +53,6 @@ export default function Post({
   beforePost,
   afterPost,
 }: PostProps) {
-  console.log('preview', preview);
   const router = useRouter();
   const dateFormated = String(
     format(new Date(post.first_publication_date), 'dd MMM yyyy')
@@ -151,15 +150,11 @@ export const getStaticProps: GetStaticProps = async ({
   preview = false,
   previewData,
 }) => {
-  console.log('previewData', previewData);
-  console.log('preview', preview);
   const { slug } = params;
   const prismic = getPrismicClient();
   const previewRef = previewData ? previewData.ref : null;
   const refOption = previewRef ? { ref: previewRef } : {};
-  console.log('slug', slug);
   const response = await prismic.getByUID('post', String(slug), refOption);
-  console.log('response', response);
   let responseAfterPost = null;
   let responseBeforePost = null;
 
